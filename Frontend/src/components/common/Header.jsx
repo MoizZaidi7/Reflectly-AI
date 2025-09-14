@@ -38,21 +38,24 @@ const Header = () => {
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link 
-            to="/dashboard" 
-            className="flex items-center space-x-3 group hover:scale-105 transition-transform duration-200"
-          >
-            <div className="relative w-10 h-10 bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow duration-300">
-              <span className="text-white font-bold text-lg">MJ</span>
-              <div className="absolute inset-0 bg-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            </div>
-            <div className="hidden sm:block">
-              <span className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                MindJournal
-              </span>
-              <div className="text-xs text-gray-500 font-medium">Mental Wellness Tracker</div>
-            </div>
-          </Link>
+<Link 
+  to="/dashboard" 
+  className="flex items-center space-x-3 group hover:scale-105 transition-transform duration-200"
+>
+  {/* Use logo image from public folder */}
+  <img 
+    src="/logo.png" 
+    alt="Reflectly AI Logo" 
+    className="w-12 h-12 rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow duration-300"
+  />
+  
+  <div className="hidden sm:block">
+    <span className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+      Reflectly AI
+    </span>
+    <div className="text-xs text-gray-500 font-medium">Mental Wellness Tracker</div>
+  </div>
+</Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-2">

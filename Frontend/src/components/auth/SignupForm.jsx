@@ -125,23 +125,29 @@ const SignupForm = () => {
       <div className="relative max-w-md w-full">
         {/* Main Form Container */}
         <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 overflow-hidden">
-          {/* Header Section */}
-          <div className="relative px-8 py-10 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 text-white">
-            <div className="absolute inset-0 bg-black/10"></div>
-            <div className="absolute top-0 right-0 -mr-8 -mt-8 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
-            <div className="absolute bottom-0 left-0 -ml-6 -mb-6 w-16 h-16 bg-white/10 rounded-full blur-xl"></div>
-            
-            <div className="relative text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl mb-6 border border-white/30">
-                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                  <span className="text-teal-600 font-bold text-xl">MJ</span>
-                </div>
-              </div>
-              
-              <h1 className="text-3xl font-bold mb-2">Join MindJournal</h1>
-              <p className="text-white/90 text-lg">Start your wellness journey today</p>
-            </div>
-          </div>
+         {/* Header Section */}
+<div className="relative px-8 py-10 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white">
+  <div className="absolute inset-0 bg-black/10"></div>
+  <div className="absolute top-0 right-0 -mr-8 -mt-8 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
+  <div className="absolute bottom-0 left-0 -ml-6 -mb-6 w-16 h-16 bg-white/10 rounded-full blur-xl"></div>
+  
+  <div className="relative text-center">
+    {/* Logo */}
+    <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl mb-6 border border-white/30">
+      <div className="w-12 h-12 rounded-xl overflow-hidden shadow-lg flex items-center justify-center bg-white">
+        <img 
+          src="/logo.png"  // 👈 replace with your logo filename in public/
+          alt="Reflectly AI Logo"
+          className="w-full h-full object-contain"
+        />
+      </div>
+    </div>
+
+    <h1 className="text-3xl font-bold mb-2">Welcome to Reflectly AI</h1>
+    <p className="text-white/90 text-lg">Your companion for mindful living</p>
+  </div>
+</div>
+
 
           {/* Form Section */}
           <div className="px-8 py-8">
