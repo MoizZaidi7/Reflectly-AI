@@ -10,6 +10,7 @@ import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Journal from './pages/Journal';
 import Trends from './pages/Trends';
+import LandingPage from './pages/LandingPage';
 
 const App = () => {
   return (
@@ -17,6 +18,8 @@ const App = () => {
       <Router>
         <div className="App">
           <Routes>
+            <Route path="/" element={<LandingPage />} />
+
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
