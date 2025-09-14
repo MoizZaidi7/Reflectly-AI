@@ -1,4 +1,4 @@
-🧠 Mental Health Journal with AI Insights
+🧠 Reflectly AI
 
 A MERN-stack web application that helps users maintain a personal mental health journal, track emotions over time, and (in later phases) receive AI-powered insights and suggestions for improving well-being.
 
