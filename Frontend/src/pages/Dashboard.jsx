@@ -29,77 +29,82 @@ const Dashboard = () => {
   }, []);
 
   const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      
-      // Fetch emotion trends and recent entries in parallel
-      const [trendsResponse, entriesResponse] = await Promise.all([
-        journalAPI.getEmotionTrends(30),
-        journalAPI.getEntries(1, 5)
-      ]);
-
-      const trends = trendsResponse.data.data;
-      const entries = entriesResponse.data.data;
-      const totalEntries = entriesResponse.data.pagination.total;
-
-      // Calculate stats
-      const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-      
-      const thisWeekEntries = entries.filter(entry => 
-        new Date(entry.date) >= oneWeekAgo
-      ).length;
-
-      const mostCommonEmotion = trends.length > 0 
-        ? trends.reduce((max, current) => max.total > current.total ? max : current).emotion
-        : 'neutral';
-
-      setDashboardData({
-        emotionTrends: trends,
-        recentEntries: entries,
-        stats: {
-          totalEntries,
-          thisWeekEntries,
-          mostCommonEmotion,
-          streak: calculateStreak(entries)
-        }
-      });
-      
-      setError('');
-    } catch (error) {
-      setError('Failed to load dashboard data');
-      console.error('Dashboard error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const calculateStreak = (entries) => {
-    if (entries.length === 0) return 0;
+  try {
+    setLoading(true);
     
-    const today = new Date();
-    let streak = 0;
-    let checkDate = new Date(today);
+    // Fetch emotion trends and recent entries in parallel
+    const [trendsResponse, entriesResponse] = await Promise.all([
+      journalAPI.getEmotionTrends(30),
+      journalAPI.getEntries(1, 5)
+    ]);
+
+    // Fix response structure handling
+    const trends = trendsResponse.data.data?.trends || [];
+    const entries = entriesResponse.data.data || [];
+    const totalEntries = entriesResponse.data.pagination?.total || entries.length;
+
+    // Calculate stats
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
     
-    // Sort entries by date (newest first)
-    const sortedEntries = [...entries].sort((a, b) => new Date(b.date) - new Date(a.date));
-    
-    for (let i = 0; i < 30; i++) { // Check last 30 days max
-      const dateStr = checkDate.toDateString();
-      const hasEntryToday = sortedEntries.some(entry => 
-        new Date(entry.date).toDateString() === dateStr
-      );
-      
-      if (hasEntryToday) {
-        streak++;
-        checkDate.setDate(checkDate.getDate() - 1);
-      } else {
-        break;
+    const thisWeekEntries = entries.filter(entry => 
+      new Date(entry.date || entry.createdAt) >= oneWeekAgo
+    ).length;
+
+    const mostCommonEmotion = trends.length > 0 
+      ? trends.reduce((max, current) => max.total > current.total ? max : current).emotion
+      : 'neutral';
+
+    setDashboardData({
+      emotionTrends: trends,
+      recentEntries: entries,
+      stats: {
+        totalEntries,
+        thisWeekEntries,
+        mostCommonEmotion,
+        streak: calculateStreak(entries)
       }
-    }
+    });
     
-    return streak;
-  };
+    setError('');
+  } catch (error) {
+    setError('Failed to load dashboard data');
+    console.error('Dashboard error:', error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+// Update calculateStreak to handle both date formats
+const calculateStreak = (entries) => {
+  if (entries.length === 0) return 0;
+  
+  const today = new Date();
+  let streak = 0;
+  let checkDate = new Date(today);
+  
+  // Sort entries by date (newest first)
+  const sortedEntries = [...entries].sort((a, b) => 
+    new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt)
+  );
+  
+  for (let i = 0; i < 30; i++) {
+    const dateStr = checkDate.toDateString();
+    const hasEntryToday = sortedEntries.some(entry => {
+      const entryDate = new Date(entry.date || entry.createdAt);
+      return entryDate.toDateString() === dateStr;
+    });
+    
+    if (hasEntryToday) {
+      streak++;
+      checkDate.setDate(checkDate.getDate() - 1);
+    } else {
+      break;
+    }
+  }
+  
+  return streak;
+};
 
   const getGreeting = () => {
     const hour = new Date().getHours();

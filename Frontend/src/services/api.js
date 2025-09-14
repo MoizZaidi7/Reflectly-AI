@@ -48,9 +48,13 @@ export const authAPI = {
 export const journalAPI = {
   createEntry: (text) => api.post('/journals', { text }),
   getEntries: (page = 1, limit = 10) => api.get(`/journals?page=${page}&limit=${limit}`),
+  getEntry: (id) => api.get(`/journals/${id}`),
   updateEntry: (id, text) => api.put(`/journals/${id}`, { text }),
   deleteEntry: (id) => api.delete(`/journals/${id}`),
-  getEmotionTrends: (days = 30) => api.get(`/journals/trends/emotions?days=${days}`)
+  getEmotionTrends: (days = 30) => api.get(`/journals/trends/emotions?days=${days}`),
+  getStats: () => api.get('/journals/stats'),
+  searchEntries: (query, emotion, dateFrom, dateTo, page = 1, limit = 10) => 
+    api.get(`/journals/search?q=${query}&emotion=${emotion}&dateFrom=${dateFrom}&dateTo=${dateTo}&page=${page}&limit=${limit}`)
 };
 
 export default api;

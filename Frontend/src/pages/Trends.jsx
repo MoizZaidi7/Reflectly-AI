@@ -1,6 +1,6 @@
 // src/pages/Trends.jsx
 import React, { useState, useEffect } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Header from '../components/common/Header';
 import EmotionChart from '../components/dashboard/EmotionChart';
 import Loading from '../components/common/Loading';
@@ -29,7 +29,9 @@ const Trends = () => {
     try {
       setLoading(true);
       const response = await journalAPI.getEmotionTrends(selectedPeriod);
-      const trends = response.data.data;
+      
+      // Fix: Access the correct response structure
+      const trends = response.data.data?.trends || [];
       
       setTrendsData(trends);
       
@@ -47,24 +49,29 @@ const Trends = () => {
   };
 
   const processTimelineData = (trends) => {
+    if (!trends || trends.length === 0) return [];
+    
     // Create a map of dates to emotions
     const dateMap = new Map();
     
     trends.forEach(trend => {
-      trend.data.forEach(dataPoint => {
-        if (!dateMap.has(dataPoint.date)) {
-          dateMap.set(dataPoint.date, {});
-        }
-        dateMap.get(dataPoint.date)[trend.emotion] = dataPoint.count;
-      });
+      if (trend.data && Array.isArray(trend.data)) {
+        trend.data.forEach(dataPoint => {
+          if (!dateMap.has(dataPoint.date)) {
+            dateMap.set(dataPoint.date, { date: dataPoint.date });
+          }
+          dateMap.get(dataPoint.date)[trend.emotion] = dataPoint.count;
+        });
+      }
     });
 
     // Convert to array format for recharts
-    const timelineArray = Array.from(dateMap.entries())
-      .map(([date, emotions]) => ({
-        date,
-        ...emotions,
-        total: Object.values(emotions).reduce((sum, count) => sum + count, 0)
+    const timelineArray = Array.from(dateMap.values())
+      .map(dayData => ({
+        ...dayData,
+        total: Object.entries(dayData)
+          .filter(([key]) => key !== 'date')
+          .reduce((sum, [_, count]) => sum + (count || 0), 0)
       }))
       .sort((a, b) => new Date(a.date) - new Date(b.date));
 
@@ -187,6 +194,7 @@ const Trends = () => {
                             stroke={config.color}
                             strokeWidth={2}
                             dot={{ r: 4 }}
+                            activeDot={{ r: 6 }}
                             connectNulls={false}
                           />
                         ))}
@@ -209,19 +217,19 @@ const Trends = () => {
                         <div className="flex items-center space-x-2">
                           <span className="text-2xl">
                             {EMOTIONS[trendsData.reduce((max, current) => 
-                              max.total > current.total ? max : current
-                            ).emotion]?.emoji}
+                              (max?.total || 0) > (current?.total || 0) ? max : current
+                            )?.emotion]?.emoji}
                           </span>
                           <div>
                             <p className="text-blue-800 font-medium">
                               {EMOTIONS[trendsData.reduce((max, current) => 
-                                max.total > current.total ? max : current
-                              ).emotion]?.label}
+                                (max?.total || 0) > (current?.total || 0) ? max : current
+                              )?.emotion]?.label}
                             </p>
                             <p className="text-sm text-blue-600">
                               {trendsData.reduce((max, current) => 
-                                max.total > current.total ? max : current
-                              ).total} entries
+                                (max?.total || 0) > (current?.total || 0) ? max : current
+                              )?.total || 0} entries
                             </p>
                           </div>
                         </div>
@@ -230,7 +238,7 @@ const Trends = () => {
                       <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                         <h4 className="font-medium text-green-900 mb-2">Total Entries</h4>
                         <p className="text-2xl font-bold text-green-800">
-                          {trendsData.reduce((sum, trend) => sum + trend.total, 0)}
+                          {trendsData.reduce((sum, trend) => sum + (trend.total || 0), 0)}
                         </p>
                         <p className="text-sm text-green-600">
                           In the last {selectedPeriod} days
