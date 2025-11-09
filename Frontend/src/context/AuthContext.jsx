@@ -1,143 +1,8 @@
-// src/context/AuthContext.jsx
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authAPI } from '../services/api';
-import { getToken, setToken, removeToken } from '../services/auth';
+import { toast } from 'sonner';
 
 const AuthContext = createContext();
-
-const initialState = {
-  user: null,
-  token: null,
-  loading: true,
-  error: null
-};
-
-const authReducer = (state, action) => {
-  switch (action.type) {
-    case 'AUTH_START':
-      return { ...state, loading: true, error: null };
-    case 'AUTH_SUCCESS':
-      return {
-        ...state,
-        loading: false,
-        user: action.payload.user,
-        token: action.payload.token,
-        error: null
-      };
-    case 'AUTH_ERROR':
-      return {
-        ...state,
-        loading: false,
-        error: action.payload,
-        user: null,
-        token: null
-      };
-    case 'AUTH_LOGOUT':
-      return {
-        ...state,
-        user: null,
-        token: null,
-        error: null
-      };
-    case 'CLEAR_ERROR':
-      return { ...state, error: null };
-    default:
-      return state;
-  }
-};
-
-export const AuthProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(authReducer, initialState);
-
-  // Check for existing token on app load
-  useEffect(() => {
-    const token = getToken();
-    if (token) {
-      // Verify token with backend
-      authAPI.getProfile()
-        .then(response => {
-          dispatch({
-            type: 'AUTH_SUCCESS',
-            payload: {
-              user: response.data.data,
-              token
-            }
-          });
-        })
-        .catch(() => {
-          removeToken();
-          dispatch({ type: 'AUTH_ERROR', payload: 'Session expired' });
-        });
-    } else {
-      dispatch({ type: 'AUTH_ERROR', payload: null });
-    }
-  }, []);
-
-  const login = async (email, password) => {
-    try {
-      dispatch({ type: 'AUTH_START' });
-      const response = await authAPI.login(email, password);
-      
-      const { token, user } = response.data;
-      setToken(token);
-      
-      dispatch({
-        type: 'AUTH_SUCCESS',
-        payload: { user, token }
-      });
-      
-      return { success: true };
-    } catch (error) {
-      const message = error.response?.data?.message || 'Login failed';
-      dispatch({ type: 'AUTH_ERROR', payload: message });
-      return { success: false, error: message };
-    }
-  };
-
-  const signup = async (name, email, password) => {
-    try {
-      dispatch({ type: 'AUTH_START' });
-      const response = await authAPI.signup(name, email, password);
-      
-      const { token, user } = response.data;
-      setToken(token);
-      
-      dispatch({
-        type: 'AUTH_SUCCESS',
-        payload: { user, token }
-      });
-      
-      return { success: true };
-    } catch (error) {
-      const message = error.response?.data?.message || 'Signup failed';
-      dispatch({ type: 'AUTH_ERROR', payload: message });
-      return { success: false, error: message };
-    }
-  };
-
-  const logout = () => {
-    removeToken();
-    dispatch({ type: 'AUTH_LOGOUT' });
-  };
-
-  const clearError = () => {
-    dispatch({ type: 'CLEAR_ERROR' });
-  };
-
-  const value = {
-    ...state,
-    login,
-    signup,
-    logout,
-    clearError
-  };
-
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -145,4 +10,131 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+};
+
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Check if user is authenticated on app load
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  const checkAuthStatus = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      // Verify token with backend
+      const response = await authAPI.verifyToken();
+      if (response.data && response.data.user) {
+        setUser(response.data.user);
+        setIsAuthenticated(true);
+        toast.success('Welcome back!');
+      } else {
+        // Token is invalid
+        localStorage.removeItem('token');
+        setUser(null);
+        setIsAuthenticated(false);
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error);
+      // Clear invalid token
+      localStorage.removeItem('token');
+      setUser(null);
+      setIsAuthenticated(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const login = async (credentials) => {
+    try {
+      setLoading(true);
+      const response = await authAPI.login(credentials);
+      
+      if (response.data && response.data.token) {
+        const { token, user } = response.data;
+        
+        // Store token
+        localStorage.setItem('token', token);
+        
+        // Update state
+        setUser(user);
+        setIsAuthenticated(true);
+        
+        toast.success('Login successful!');
+        return { success: true };
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      const message = error.response?.data?.message || 'Login failed';
+      toast.error(message);
+      return { success: false, error: message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signup = async (userData) => {
+    try {
+      setLoading(true);
+      const response = await authAPI.signup(userData);
+      
+      if (response.data && response.data.token) {
+        const { token, user } = response.data;
+        
+        // Store token
+        localStorage.setItem('token', token);
+        
+        // Update state
+        setUser(user);
+        setIsAuthenticated(true);
+        
+        toast.success('Account created successfully!');
+        return { success: true };
+      }
+    } catch (error) {
+      console.error('Signup error:', error);
+      const message = error.response?.data?.message || 'Signup failed';
+      toast.error(message);
+      return { success: false, error: message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logout = () => {
+    // Clear token
+    localStorage.removeItem('token');
+    
+    // Clear state
+    setUser(null);
+    setIsAuthenticated(false);
+    
+    toast.success('Logged out successfully');
+  };
+
+  const value = {
+    user,
+    loading,
+    isAuthenticated,
+    login,
+    signup,
+    logout,
+    checkAuthStatus
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
