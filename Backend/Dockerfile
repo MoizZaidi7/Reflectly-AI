@@ -3,6 +3,9 @@
 # Use official Node.js LTS image
 FROM node:20-alpine
 
+# Install wget for healthcheck
+RUN apk add --no-cache wget
+
 # Set working directory
 WORKDIR /app
 

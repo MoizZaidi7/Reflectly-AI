@@ -19,8 +19,8 @@ services:
     networks:
       - app-network  # Connect to the 'app-network' network
     healthcheck:
-      # Use the mongo shell to check if MongoDB is running and responsive
-      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      # Use the mongosh shell to check if MongoDB is running and responsive
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s  # Check every 10 seconds
       timeout: 5s    # Timeout after 5 seconds
       retries: 5     # Retry 5 times before considering the service unhealthy
@@ -49,11 +49,11 @@ services:
       - ./Backend/logs:/app/logs  # Mount the logs directory (make sure the directory exists)
     healthcheck:
       # Check if the backend API is responsive by hitting the /api/health endpoint
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/api/health"]
       interval: 30s  # Check every 30 seconds
       timeout: 10s   # Timeout after 10 seconds
-      retries: 3     # Retry 3 times before considering the service unhealthy
-      start_period: 40s  # Give the service 40 seconds to start before starting health checks
+      retries: 5     # Retry 5 times before considering the service unhealthy
+      start_period: 60s  # Give the service 60 seconds to start before starting health checks
 
   # Frontend Service
   frontend:
