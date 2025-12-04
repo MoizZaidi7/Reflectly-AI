@@ -1,0 +1,65 @@
+pipeline {
+    agent any
+
+    // Trigger the pipeline on GitHub webhook push events
+    triggers {
+        githubPush()
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                // Checkout the code from the GitHub repository
+                checkout scm
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // Build the Docker image for running Selenium tests
+                    sh 'docker build -t selenium-tests ./tests'
+                }
+            }
+        }
+
+        stage('Run Selenium Tests') {
+            steps {
+                script {
+                    // Run the Docker container to execute pytest with --network host
+                    sh 'docker run --rm --network host selenium-tests'
+                }
+            }
+        }
+
+        stage('Archive Test Results') {
+            steps {
+                // Archive the pytest HTML report if generated
+                archiveArtifacts artifacts: 'tests/report.html', allowEmptyArchive: true
+                // Also archive JUnit XML if configured
+                junit 'tests/junit-report.xml'
+            }
+        }
+    }
+
+    post {
+        success {
+            // Send success email using emailext plugin
+            emailext (
+                subject: 'DevOps Test Report - SUCCESS',
+                body: '''The Selenium tests have passed successfully.
+                Check the Jenkins console for details: ${BUILD_URL}''',
+                to: 'your-email@example.com'
+            )
+        }
+        failure {
+            // Send failure email using emailext plugin
+            emailext (
+                subject: 'DevOps Test Report - FAILURE',
+                body: '''The Selenium tests have failed.
+                Check the Jenkins console for details: ${BUILD_URL}''',
+                to: 'your-email@example.com'
+            )
+        }
+    }
+}

@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb-jenkins:
+    image: mongo:7.0
+    container_name: jenkins-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-password123}
+      MONGO_INITDB_DATABASE: ${MONGO_DB_NAME:-AiMentalHealth}
+    ports:
+      - "${MONGO_PORT:-27018}:27017"
+    volumes:
+      - jenkins_mongodb_data:/data/db
+      - jenkins_mongodb_config:/data/configdb
+    networks:
+      - jenkins-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend Service
+  backend-jenkins:
+    image: node:20-alpine
+    container_name: jenkins-backend
+    restart: unless-stopped
+    working_dir: /app
+    ports:
+      - "${BACKEND_PORT:-5001}:5000"
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 5000
+      MONGODB_URI: mongodb://${MONGO_ROOT_USERNAME:-admin}:${MONGO_ROOT_PASSWORD:-password123}@mongodb-jenkins:27017/${MONGO_DB_NAME:-AiMentalHealth}?authSource=admin
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-this}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3001}
+    depends_on:
+      mongodb-jenkins:
+        condition: service_healthy
+    networks:
+      - jenkins-network
+    volumes:
+      - ./Backend:/app
+      - /app/node_modules
+    command: sh -c "npm install && npm start"
+
+  # Frontend Service
+  frontend-jenkins:
+    image: node:20-alpine
+    container_name: jenkins-frontend
+    restart: unless-stopped
+    working_dir: /app
+    ports:
+      - "${FRONTEND_PORT:-3001}:5173"
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:5001/api}
+    depends_on:
+      - backend-jenkins
+    networks:
+      - jenkins-network
+    volumes:
+      - ./Frontend:/app
+      - /app/node_modules
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+
+networks:
+  jenkins-network:
+    driver: bridge
+
+volumes:
+  jenkins_mongodb_data:
+    driver: local
+  jenkins_mongodb_config:
+    driver: local
