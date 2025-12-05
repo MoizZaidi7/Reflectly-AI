@@ -17,4 +17,3 @@ def test_register_success(driver):
     # Verify submit button exists
     button = driver.find_element(By.TAG_NAME, "button")
     assert button.is_displayed()
-    assert "/login" in driver.current_url

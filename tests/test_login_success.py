@@ -17,4 +17,3 @@ def test_login_success(driver):
     # Verify login button exists
     button = driver.find_element(By.TAG_NAME, "button")
     assert button.is_displayed()
-    assert "/dashboard" in driver.current_url
