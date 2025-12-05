@@ -49,7 +49,8 @@ pipeline {
                 subject: 'DevOps Test Report - SUCCESS',
                 body: '''The Selenium tests have passed successfully.
                 Check the Jenkins console for details: ${BUILD_URL}''',
-                to: 'your-email@example.com'
+                to: '$DEFAULT_RECIPIENTS',
+                recipientProviders: [buildUser()]
             )
         }
         failure {
@@ -58,7 +59,8 @@ pipeline {
                 subject: 'DevOps Test Report - FAILURE',
                 body: '''The Selenium tests have failed.
                 Check the Jenkins console for details: ${BUILD_URL}''',
-                to: 'your-email@example.com'
+                to: '$DEFAULT_RECIPIENTS',
+                recipientProviders: [buildUser()]
             )
         }
     }

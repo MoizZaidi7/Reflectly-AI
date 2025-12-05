@@ -6,7 +6,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 def test_form_inputs(driver):
     # Navigate to the login page
-    driver.get("http://localhost:3000/login")
+    driver.get("http://51.20.31.20:3000/login")
     # Wait for form to load
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "form")))
     # Check that input fields are present
