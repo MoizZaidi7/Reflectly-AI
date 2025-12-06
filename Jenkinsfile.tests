@@ -43,24 +43,26 @@ pipeline {
     }
 
     post {
-        success {
-            // Send success email using emailext plugin
+        always {
+            // Send email notification regardless of build result
             emailext (
-                subject: 'DevOps Test Report - SUCCESS',
-                body: '''The Selenium tests have passed successfully.
-                Check the Jenkins console for details: ${BUILD_URL}''',
-                to: '$DEFAULT_RECIPIENTS',
-                recipientProviders: [buildUser()]
-            )
-        }
-        failure {
-            // Send failure email using emailext plugin
-            emailext (
-                subject: 'DevOps Test Report - FAILURE',
-                body: '''The Selenium tests have failed.
-                Check the Jenkins console for details: ${BUILD_URL}''',
-                to: '$DEFAULT_RECIPIENTS',
-                recipientProviders: [buildUser()]
+                subject: "Jenkins Build ${currentBuild.currentResult}: AI-Health-Journal-Tests #${env.BUILD_NUMBER}",
+                body: """
+                <h2>Build ${currentBuild.currentResult}</h2>
+                <p><strong>Job:</strong> ${env.JOB_NAME}</p>
+                <p><strong>Build Number:</strong> ${env.BUILD_NUMBER}</p>
+                <p><strong>Build Status:</strong> ${currentBuild.currentResult}</p>
+                <p><strong>Build URL:</strong> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
+                <p><strong>Console Output:</strong> <a href="${env.BUILD_URL}console">${env.BUILD_URL}console</a></p>
+                <hr>
+                <p>Check the console output for detailed test results.</p>
+                """,
+                recipientProviders: [
+                    requestor(),
+                    culprits(),
+                    developers()
+                ],
+                mimeType: 'text/html'
             )
         }
     }
