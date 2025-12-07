@@ -44,21 +44,16 @@ pipeline {
 
     post {
         always {
-            // Send email notification regardless of build result
-            emailext (
-                subject: "Jenkins Build ${currentBuild.currentResult}: AI-Health-Journal-Tests #${env.BUILD_NUMBER}",
-                body: """Build ${currentBuild.currentResult}
-                
-Job: ${env.JOB_NAME}
-Build Number: ${env.BUILD_NUMBER}
-Build Status: ${currentBuild.currentResult}
-Build URL: ${env.BUILD_URL}
-Console Output: ${env.BUILD_URL}console
-
-Check the console output for detailed test results.""",
-                to: 'SyedMuhammadMoizZaidi@yahoo.com',
-                replyTo: 'SyedMuhammadMoizZaidi@yahoo.com'
-            )
+            script {
+                emailext (
+                    subject: "Build ${currentBuild.currentResult} - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                    body: "Build Status: ${currentBuild.currentResult}\nJob: ${env.JOB_NAME}\nBuild: #${env.BUILD_NUMBER}\nURL: ${env.BUILD_URL}",
+                    to: 'moizzaidi71@gmail.com',
+                    from: 'moizzaidi71@gmail.com',
+                    replyTo: 'moizzaidi71@gmail.com',
+                    mimeType: 'text/plain'
+                )
+            }
         }
     }
 }
